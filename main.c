@@ -21,9 +21,16 @@ void main(void)
 
     configHFXT();
     ConfigureUART_A0();
-    lcd4bits_init();
-    lcd_SetLineNumber(0x00);
-    lcd_putch('A');
+    LCD_Initializtion();
+    lcd_clear();
+    lcd_SetLineNumber(FirstLine);
+
+    lcd_putch('d');
+    lcd_putch('e');
+    lcd_putch('f');
+    lcd_putch('g');
+    lcd_putch('h');
+    lcd_putch('i');
 
     printf("keyscan started: press a key on your 4x4 keypad ....\r\n");
     kepadconfiguration();
@@ -39,7 +46,8 @@ void main(void)
         if (NewKeyPressed == YES)
         {
             NewKeyPressed = NO;
-            printf("Key Found: %d \r\n", FoundKey);
+            lcd_clear();
+            lcd_putch(0x30-1 + FoundKey);
         }
     }
 }

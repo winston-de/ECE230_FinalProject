@@ -1,8 +1,13 @@
-//File Name: lcd8bitsece230winter23.c
+//File Name: lcd8or4bitsece230winter23.c
 //Author: Jianjian Song
-//Date: January 28, 2022
-//ECE230-03 Winter 2021-2022
-//
+//Date: February 11, 2023
+//ECE230-03, -04 Winter 2022-2023
+//LCD functions for both 4-bit and 8-bit data modes
+
+//To choose 4-bit data or 8-bit data mode,
+//turn on or off the following defnition
+//#define Test4bits in lcd8or4bitsece230winter23.h
+
 /*
  *  LCD Display Panel Driver Routines
  *  Reference:  Refer to the Optrex LCD User Manual for all details and command formats
@@ -29,45 +34,10 @@
  *    Pins 7-14: LCD data bits 0-7 LCD
  *    Pin 15: +4.2V for LED back light
  *    Pin 16: GND for LED back light
- *
- *  The available routines in this file are:
- *
- *    1.  lcd8bits_bits( )
- *        Always call lcd_init() first, which follows the manufacturer's
- *        directions for initializing the LCD display panel into 8-bit transfer mode.
- *        Then you may call any of the other routines, as needed.  Note that this
- *        initialization routine also makes RD7:0 all outputs, as required to drive
- *        the LCD panel connected to RD7:0.  It also selects 8 MHz internal clock.
- *
- *    2.  lcd_clear( )
- *        Clears LCD display and homes the cursor
- *
- *    3.  lcd_puts(const char s*)
- *        writes a constant character string to the lcd panel
- *
- *    4.  lcd_putch(char s)
- *        writes a single character to lcd panel
- *
- *    5.  lcd_goto(unsigned char pos)
- *        Moves cursor to desired position.  For 16 x 2 LCD display panel, 
- *        the columns of Row 1 are 0x00....0x10
- *        the columns of Row 2 are 0x40....0x50
- *
- *    6.  DelayMs(unsigned int NrMs)
- *        Delays for NrMs milliseconds.
- *
  */
 #include <lcd8or4bitsece230winter23.h>
 #include <msp.h>
-
-#define Test4bits
-
-void DelayMs(unsigned int);
-
-/*
- * Initialize the LCD - put into 8 bit mode
- */
-/*                MSP432P401
+/*           MSP432P4111 LCD Interface (4-bit or 8-bit modes)
  *             ------------------
  *         /|\|                  |
  *          | |                  |
@@ -91,6 +61,29 @@ void DelayMs(unsigned int);
 #define Set_Enable_Low  LCD_CONTROL_PORT->OUT =  (LCD_CONTROL_PORT->OUT) & ~(0b1<<LCD_EN);
 #define Set_Enable_High  LCD_CONTROL_PORT->OUT =  (LCD_CONTROL_PORT->OUT) | (0b1<<LCD_EN);
 
+//making E line rise and then fall.  This falling edge
+//writes data on LCD Panel pin DB7-0 into LCD Panel.
+void LCD_STROBE(void) {
+    Set_Enable_High
+    DelayMs(20);
+    Set_Enable_Low
+}
+
+/*
+ * lcd_write function ---writes a byte to the LCD in 8-bit mode
+ * Note that the "mode" argument is set to either CMD_MODE (=0) or DTA_MODE (=1), so that the
+ * LCD panel knows whether an instruction byte is being written to it or an ASCII code is being written to it
+ * that is to be displayed on the panel.
+ */
+void lcd8bits_write(unsigned char mode, unsigned char CmdChar) {
+
+    if(mode==CMD_MODE) Set_Command_Mode //LCD_CONTROL_PORT->OUT = (LCD_CONTROL_PORT->OUT) & (~(0b1<<LCD_RS));
+    else {Set_Data_Mode; }
+    DelayMs(10);
+    LCD_DATA_PORT->OUT = CmdChar;
+    LCD_STROBE(); // Write 8 bits of data on D7-0
+}
+
 void lcd8bits_init(void)
 {
     LCD_CONTROL_PORT->DIR = LCD_CONTROL_PORT->DIR | ((0x01<<LCD_RS) | (0x01<<LCD_EN));
@@ -105,42 +98,17 @@ void lcd8bits_init(void)
     Set_Enable_Low
 
     DelayMs(20); // wait 15mSec after power applied,
-//    lcd8bits_write(CMD_MODE, LCDCMD_FunctionSet); // function set: 8-bit mode, 2 lines, 5x7 dots
     lcd8bits_write(CMD_MODE, LCDCMD_FunctionSet_8bits); // function set: 8-bit mode, 2 lines, 5x7 dots
 
     DelayMs(4);
- //   lcd8bits_write(CMD_MODE, LCDCMD_DisplaySettings); // display ON/OFF control: display on, cursor off, blink off
+    lcd8bits_write(CMD_MODE, LCDCMD_FunctionSet_8bits); // function set: 8-bit mode, 2 lines, 5x7 dots
+
     lcd8bits_write(CMD_MODE, LCDCMD_DisplaySettings); // display ON/OFF control: display on, cursor off, blink off
     DelayMs(4);
     lcd_clear(); // Clear screen
     DelayMs(4);
-//    lcd8bits_write(CMD_MODE, LCDCMD_EMS); // Set entry Mode
     lcd8bits_write(CMD_MODE, LCDCMD_EMS); // Set entry Mode
 } //end lcd8bits_init()
-
-//making E line rise and then fall.  This falling edge
-//writes data on LCD Panel pin DB7-0 into LCD Panel.
-void LCD_STROBE(void) {
-    Set_Enable_High
-    DelayMs(30);
-    Set_Enable_Low
-}
-
-/*
- * lcd_write function ---writes a byte to the LCD in 8-bit mode
- * Note that the "mode" argument is set to either CMD_MODE (=0) or DTA_MODE (=1), so that the
- * LCD panel knows whether an instruction byte is being written to it or an ASCII code is being written to it
- * that is to be displayed on the panel.
- */ 
-void lcd8bits_write(unsigned char mode, unsigned char CmdChar) {
-
-    if(mode==CMD_MODE) Set_Command_Mode //LCD_CONTROL_PORT->OUT = (LCD_CONTROL_PORT->OUT) & (~(0b1<<LCD_RS));
-    else {Set_Data_Mode; }
-    DelayMs(10);
-    LCD_DATA_PORT->OUT = CmdChar;
-    LCD_STROBE(); // Write 8 bits of data on D7-0
-}
-
 
 void lcd4bits_init(void)
 {
@@ -156,8 +124,11 @@ void lcd4bits_init(void)
     Set_Enable_Low
 
     DelayMs(20); // wait 15mSec after power applied,
-    lcd8bits_write(CMD_MODE, LCDCMD_FunctionSet_4bits); // function set: 4-bit mode, 2 lines, 5x7 dots
+    lcd4bits_write(CMD_MODE, LCDCMD_FunctionSet_4bits); // function set: 4-bit mode, 2 lines, 5x7 dots
     DelayMs(4);
+    lcd4bits_write(CMD_MODE, LCDCMD_FunctionSet_4bits);
+    DelayMs(1);
+    lcd4bits_write(CMD_MODE, LCDCMD_FunctionSet_4bits);
     //from now on, the LCD is in 4-bit mode
     lcd4bits_write(CMD_MODE, LCDCMD_DisplaySettings); // display ON/OFF control: display on, cursor off, blink off
     DelayMs(4);
@@ -178,26 +149,45 @@ void lcd4bits_write(unsigned char mode, unsigned char CmdChar) {
     LCD_STROBE(); // Write 8 bits of data on D7-0
 }
 
+void LCD_Initializtion (void) {
+#ifdef Test4bits
+    lcd4bits_init();
+#else
+    lcd8bits_init();
+#endif
+}
+
 /* write a string of chars to the LCD */
 void lcd_puts(const char *string) {
     while (*string != 0) // Last character in a C-language string is alway "0" (ASCII NULL character)
-//        lcd8bits_write(DATA_MODE, *string++);
+    {
+#ifdef Test4bits
     lcd4bits_write(DATA_MODE, *string++);
+#else
+    lcd8bits_write(DATA_MODE, *string++);
+#endif
 }
+} // end lcd_puts()
 
 /*
  *  Clear and home the LCD
  */
 void lcd_clear(void) {
- //   lcd8bits_write(CMD_MODE, LCDCMD_ClearDisplay);
+#ifdef Test4bits
     lcd4bits_write(CMD_MODE, LCDCMD_ClearDisplay);
+#else
+    lcd8bits_write(CMD_MODE, LCDCMD_ClearDisplay);
+#endif
     DelayMs(2);
 }
 
 /* write one character to the LCD */
 void lcd_putch(char character) {
+#ifdef Test4bits
     lcd4bits_write(DATA_MODE, character);
-//    lcd8bits_write(DATA_MODE, character);
+#else
+    lcd8bits_write(DATA_MODE, character);
+#endif
 }
 
 /*
@@ -207,13 +197,20 @@ void lcd_putch(char character) {
  *     the columns of Row 2 are 0x40....0x50
  */
 void lcd_SetLineNumber(unsigned char position) {
+#ifdef Test4bits
     lcd4bits_write(CMD_MODE, 0x80 | position); // The "cursor move" command is indicated by MSB=1 (0x80)
- //   lcd8bits_write(CMD_MODE, 0x80 | position);
+#else
+    lcd8bits_write(CMD_MODE, 0x80 | position);
+#endif
     // followed by the panel position address (0x00- 0x7F)
 }
 
+#define CLOCK_SPEED 48
+#define SCALE_FACTOR (CLOCK_SPEED/3)
 void DelayMs(unsigned int nrms) {
     unsigned int i, j;
-    for (j = 0; j < nrms; j++)
+    for (j = 0; j < nrms*SCALE_FACTOR; j++)
         for (i = 0; i < 20; i++);
 }
+
+

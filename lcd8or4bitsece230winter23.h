@@ -1,24 +1,27 @@
-//File Name: lcd8bitsece230winter23.h
+//File Name: lcd8or4bitsece230winter23.h
 //Author: Jianjian Song
 //Date: Jan 27, 2023
 //ECE230 Winter 2022-2023
 
+//Choose 4-bit data or 8-bit data by turning this definition on or off
+#define Test4bits
+
 #define LCDCMD_ClearDisplay     0x01    //clear display: clear, move cursor home
 #define LCDCMD_EMS              0x06    //entry mode set: auto increment cursor after each char sent
 #define LCDCMD_DisplaySettings  0x0C    //display ON/OFF control: display on, cursor off, blink off
-#define LCDCMD_FunctionSet_8bits      0x28    //function set: 8-bit mode, 2 lines, 5x7 dots
-#define LCDCMD_FunctionSet_4bits      0x38    //function set: 4-bit mode, 2 lines, 5x7 dots
+#define LCDCMD_FunctionSet_8bits      0x38    //function set: 8-bit mode, 2 lines, 5x7 dots
+#define LCDCMD_FunctionSet_4bits      0x28    //function set: 4-bit mode, 2 lines, 5x7 dots
 #define FirstLine 0x00
 #define SecondLine 0x40
 #define CMD_MODE        0           //0 for command mode
 #define DATA_MODE       1           //1 for data mode
 
-//enum {bits8, bits4} LCD_mode=bit4;
-
 extern void Display(unsigned char , unsigned int );
 
 /* delay for indicated nr of ms */
 extern void DelayMs(unsigned int);
+
+void LCD_Initializtion (void);
 
 /* write a byte to the LCD in 8 bit mode */
 extern void lcd8bits_write(unsigned char mode, unsigned char CmdChar);
@@ -34,6 +37,8 @@ extern void lcd_SetLineNumber(unsigned char pos);
 
 /* intialize the LCD - call before anything else */
 extern void lcd8bits_init(void);
+
+void lcd8bits_write(unsigned char mode, unsigned char CmdChar);
 
 extern void lcd_putch(char);
 
