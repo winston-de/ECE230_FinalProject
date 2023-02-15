@@ -27,6 +27,10 @@ void main(void)
     configHFXT();
     ConfigureUART_A0();
     LCD_Initializtion();
+
+    initStepperMotor();
+    setStepFrequency(1);
+
     lcd_clear();
     lcd_SetLineNumber(FirstLine);
 
@@ -54,6 +58,11 @@ void main(void)
             lcd_clear();
            // lcd_putch(0x30-1 + FoundKey);
             lcd_putch(convert_key_val(FoundKey));
+            if(FoundKey == 0x01) {
+                unlock();
+            } else if(FoundKey == 0x02) {
+                lock();
+            }
         }
     }
 }
