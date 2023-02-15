@@ -11,8 +11,13 @@
  */
 
 #include "utilities.h"
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+
 
 int convert_key_val (char FoundKey) {
+    FoundKey++;
 
     switch (FoundKey) {
       case 1:
@@ -70,6 +75,16 @@ int convert_key_val (char FoundKey) {
 
 }
 
+bool arraysEqual(char arr1[], char arr2[], uint8_t length) {
+    int i;
+    for(i = 0; i < length; i++) {
+        if(arr1[i] != arr2[i]) {
+            return false;
+        }
+    }
+
+    return 1;
+}
 
 
 

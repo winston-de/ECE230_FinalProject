@@ -56,13 +56,32 @@ void main(void)
         {
             NewKeyPressed = NO;
             lcd_clear();
-           // lcd_putch(0x30-1 + FoundKey);
-            lcd_putch(convert_key_val(FoundKey));
-            if(FoundKey == 0x01) {
-                unlock();
-            } else if(FoundKey == 0x02) {
-                lock();
-            }
+            char key = convert_key_val(FoundKey);
+//            lcd_putch(key);
+
+            addKey(key);
         }
     }
+}
+
+char userCode[4] = {'1', '2', '3', '4'};
+char enteredCode[4] = {NULL, NULL, NULL, NULL};
+uint8_t numsPressed = 0;
+uint8_t numDigits = 4;
+void addKey(char k) {
+    enteredCode[numsPressed] = k;
+
+    if(numsPressed == numDigits) {
+        if(arraysEqual(userCode, enteredCode, numDigits) == 1) {
+            unlock();
+            numsPressed = 0;
+        }
+    }
+
+    int i;
+    for(i = 0; i < numsPressed; i++) {
+        lcd_putch(enteredCode[i]);
+    }
+
+    numsPressed++;
 }
