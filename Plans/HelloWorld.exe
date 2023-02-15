@@ -1,0 +1,10 @@
+ ; @echo off
+
+  ; Racket.exe "%~f0" %*
+
+  ; exit /b
+
+#lang racket
+
+(define a 5)
+(+ a 5)

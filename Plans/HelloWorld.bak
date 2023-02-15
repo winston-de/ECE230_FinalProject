@@ -1,0 +1,6 @@
+#! C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Racket
+
+# lang racket
+
+(define a 5)
+(+ a 5)

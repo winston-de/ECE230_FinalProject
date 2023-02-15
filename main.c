@@ -4,12 +4,17 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+
+
+#include "utilities.h"
 #include "keypadscan_subroutines.h"
 
 
 enum Status {NO, YES};
 extern char NewKeyPressed;
 extern char FoundKey;
+
+
 
 /**
  * main.c
@@ -47,7 +52,8 @@ void main(void)
         {
             NewKeyPressed = NO;
             lcd_clear();
-            lcd_putch(0x30-1 + FoundKey);
+           // lcd_putch(0x30-1 + FoundKey);
+            lcd_putch(convert_key_val(FoundKey));
         }
     }
 }
