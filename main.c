@@ -35,8 +35,7 @@ void main(void)
     ConfigureUART_A0();
     LCD_Initializtion();
 
-    initStepperMotor();
-    setStepFrequency(1);
+    initServoMotor();
 
     initSpeaker();
     initBluetooth();
@@ -54,8 +53,6 @@ void main(void)
     printf("keyscan started: press a key on your 4x4 keypad ....\r\n");
     kepadconfiguration();
 
-// Enable global interrupt
-    __enable_irq();
 //clear keypad output pins to be 0 to be ready for input interrupt
 //Do not change input pin values
     KeypadPort->OUT = (KeypadPort->OUT & ~KeypadOutputPins)
