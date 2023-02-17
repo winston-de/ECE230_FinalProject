@@ -13,7 +13,7 @@
 #ifndef UTILITIES_H_
 #define UTILITIES_H_
 
-int convert_key_val (char);
-bool arraysEqual(char arr1[], char arr2[], uint8_t length);
+char convert_key_val (char);
+bool arraysEqual(char arr1[], char arr2[]);
 
 #endif /* UTILITIES_H_ */

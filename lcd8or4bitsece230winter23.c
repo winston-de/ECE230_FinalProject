@@ -49,9 +49,9 @@
  *            |                  |
  */
 //define Ports and Pins to interface LCD
-#define LCD_CONTROL_PORT P6 //control signal port
-#define LCD_RS          4        //register select pin -LCD command/data
-#define LCD_EN          5         //E clock pin -LCD Enable, falling edge active
+#define LCD_CONTROL_PORT P1 //control signal port
+#define LCD_RS          6        //register select pin -LCD command/data
+#define LCD_EN          7         //E clock pin -LCD Enable, falling edge active
 #define LCD_DATA_PORT        P5       //Data port -LCD Data pins (D0 - D7)
 #define LCD_DATA_4PINS   (BIT7 | BIT6 |BIT5 |BIT4)
 
