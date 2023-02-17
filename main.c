@@ -39,6 +39,8 @@ void main(void)
     setStepFrequency(1);
 
     initSpeaker();
+    initBluetooth();
+
     __enable_irq();
 
     lcd_clear();
@@ -431,6 +433,7 @@ void debounce(void){
 void keyPressed(char key) {
     //TODO: add different
     playNote(NOTEA4, BEEP_PERIOD);
+    printMessage("please help me i am dying inside", 33);
 }
 
 
