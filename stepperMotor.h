@@ -26,7 +26,7 @@ extern "C"
 
 #include "msp.h"
 
-#define STEPPER_PORT                    P2
+#define STEPPER_PORT                    P6
 #define STEPPER_MASK                    (0x00F0)
 #define STEPPER_IN1                     (0x0080)
 #define STEPPER_IN2                     (0x0040)

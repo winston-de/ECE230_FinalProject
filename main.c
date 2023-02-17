@@ -3,12 +3,16 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
-
-
-
 #include "utilities.h"
 #include "keypadscan_subroutines.h"
 
+#define ACLK 32768 //Hz
+#define BEEP_PERIOD       ACLK/8    //1 second
+
+// Note A4 - 440 Hz, B4 - 493.88 Hz, C5 - 523.26 Hz
+#define NOTEA4  27273
+#define NOTEB4  24297
+#define NOTEC5  22933
 
 enum Status {NO, YES};
 extern char NewKeyPressed;
@@ -27,11 +31,15 @@ void main(void)
     WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;
 
     configHFXT();
+    configLFXT();
     ConfigureUART_A0();
     LCD_Initializtion();
 
     initStepperMotor();
     setStepFrequency(1);
+
+    initSpeaker();
+    __enable_irq();
 
     lcd_clear();
     lcd_SetLineNumber(FirstLine);
@@ -58,6 +66,7 @@ void main(void)
             lcd_clear();
 
             int key_pressed = convert_key_val(FoundKey);
+            keyPressed(FoundKey);
 
             switch (key_pressed) {
 
@@ -131,8 +140,8 @@ void enterCode(void){
            debounce();
 
            if(NewKeyPressed == YES){
-
                key = convert_key_val(FoundKey);
+               keyPressed(key);
                entered_code[i] = key;
                i++;
            }
@@ -158,7 +167,7 @@ void enterCode(void){
 
         unlock();
         lcd_SetLineNumber(SecondLine);
-        lcd_putch('U');lcd_putch('n');lcd_putch('l');lcd_putch('o');lcd_putch('c');lcd_putch('k');lcd_putch('e');lcd_putch('d');
+        lcd_puts("Unlocked");
         NewKeyPressed = NO;
         return;
 
@@ -229,8 +238,8 @@ void setCode(void){
                debounce();
 
                if(NewKeyPressed == YES){
-
                    key = convert_key_val(FoundKey);
+                   keyPressed(key);
                    entered_code[i] = key;
                    i++;
                }
@@ -366,8 +375,8 @@ void restoreDefault(void){
               debounce();
 
               if(NewKeyPressed == YES){
-
                   key = convert_key_val(FoundKey);
+                  keyPressed(key);
                   entered_code[i] = key;
                   i++;
               }
@@ -419,15 +428,10 @@ void debounce(void){
     for(delay = 0; delay < 150; delay++);
 } //end debounce()
 
-
-
-
-
-
-
-
-
-
+void keyPressed(char key) {
+    //TODO: add different
+    playNote(NOTEA4, BEEP_PERIOD);
+}
 
 
 

@@ -74,12 +74,12 @@ void stepClockwise(void) {
     currentStep = (currentStep + 1) % STEP_SEQ_CNT;  // increment to next step position
     // TODO update output port for current step pattern
     //  do this as a single assignment to avoid transient changes on driver signals
-    P2->OUT = (P2->OUT & 0x0F) + (stepperSequence[currentStep] << 4);
+    STEPPER_PORT->OUT = (P2->OUT & 0x0F) + (stepperSequence[currentStep] << 4);
 }
 
 void stepCounterClockwise(void) {
     currentStep = ((uint8_t)(currentStep - 1)) % STEP_SEQ_CNT;  // decrement to previous step position (counter-clockwise)
-    P2->OUT = (P2->OUT & 0x0F) + (stepperSequence[currentStep] << 4);
+    STEPPER_PORT->OUT = (P2->OUT & 0x0F) + (stepperSequence[currentStep] << 4);
 }
 
 void toggleDirection(void) {
