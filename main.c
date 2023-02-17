@@ -14,6 +14,8 @@ enum Status {NO, YES};
 extern char NewKeyPressed;
 extern char FoundKey;
 
+
+
 int LIMIT = 3;
 int x_count = 0;
 
@@ -25,6 +27,8 @@ void main(void)
 {
     /* Stop Watchdog timer */
     WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;
+
+    char lcd_data[16];
 
     configHFXT();
     ConfigureUART_A0();
@@ -180,7 +184,10 @@ void enterCode(void){
         x_count ++;
         lcd_SetLineNumber(SecondLine);
         lcd_puts("Wrong -> #");
-        lcd_putch((char) x_count);
+
+
+        sprintf(lcd_data, " %d",x_count);
+        lcd_puts(lcd_data);
 
 
 
