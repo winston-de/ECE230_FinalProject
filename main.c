@@ -1,3 +1,11 @@
+/**
+ * main.c
+ * Created on 2/7/23
+ * Authors: Winston de Jong, Andrew Mills, Simarjit Dhillon
+ *
+ *  This is the main file for controlling the functions of the safe. It communicates with the individual components,
+ *  such as the lcd display, the servo driver, the speaker, and the Bluetooth module.
+ */
 #include <lcd8or4bitsece230winter23.h>
 #include "msp.h"
 #include <stdint.h>
@@ -38,51 +46,25 @@ char break_alert2[] =
 
 // Note frequencies C3-B5
 #define FrequencyC3 130.81 //Hz
-#define FrequencyD3 146.83 //Hz
-#define FrequencyE3 164.81//Hz
-#define FrequencyF3 174.61//Hz
 #define FrequencyG3 196//Hz
-#define FrequencyA3 220 //Hz
-#define FrequencyB3 246.94//Hz
 
-#define FrequencyC4 261.63 //Hz
 #define FrequencyD4 293.66 //Hz
-#define FrequencyE4 329.63//Hz
-#define FrequencyF4 349.23//Hz
 #define FrequencyG4 392//Hz
 #define FrequencyA4 440 //Hz
 #define FrequencyB4 493.88//Hz
 
-#define FrequencyC5 523.25 //Hz
-#define FrequencyD5 587.33 //Hz
-#define FrequencyE5 659.25//Hz
-#define FrequencyF5 698.46//Hz
-#define FrequencyG5 783.99//Hz
 #define FrequencyA5 880 //Hz
 #define FrequencyB5 1046.50//Hz
 
 // All NOTES : C3 - B5
 #define NOTEC3  TimerA0Clock/FrequencyC3
-#define NOTED3  TimerA0Clock/FrequencyD3
-#define NOTEE3  TimerA0Clock/FrequencyE3
-#define NOTEF3  TimerA0Clock/FrequencyF3
 #define NOTEG3  TimerA0Clock/FrequencyG3
-#define NOTEA3  TimerA0Clock/FrequencyA3
-#define NOTEB3  TimerA0Clock/FrequencyB3
 
-#define NOTEC4  TimerA0Clock/FrequencyC4
 #define NOTED4  TimerA0Clock/FrequencyD4
-#define NOTEE4  TimerA0Clock/FrequencyE4
-#define NOTEF4  TimerA0Clock/FrequencyF4
 #define NOTEG4  TimerA0Clock/FrequencyG4
 #define NOTEA4  TimerA0Clock/FrequencyA4
 #define NOTEB4  TimerA0Clock/FrequencyB4
 
-#define NOTEC5  TimerA0Clock/FrequencyC5
-#define NOTED5  TimerA0Clock/FrequencyD5
-#define NOTEE5  TimerA0Clock/FrequencyE5
-#define NOTEF5  TimerA0Clock/FrequencyF5
-#define NOTEG5  TimerA0Clock/FrequencyG5
 #define NOTEA5  TimerA0Clock/FrequencyA5
 #define NOTEB5  TimerA0Clock/FrequencyB5
 

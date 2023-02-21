@@ -16,9 +16,10 @@
 #include <stdio.h>
 
 
+/*
+ * Convert a key number to it's ASCII character (ex, 4-> 'A')
+ */
 char convert_key_val (char FoundKey) {
-
-
     switch (FoundKey) {
       case 1:
           return '1' ; // return ASCII for '1'
@@ -75,14 +76,13 @@ char convert_key_val (char FoundKey) {
 
 }
 
+/**
+ * Return true if 2 character arrays are equal. Used for checking if the password is correct
+ */
 bool arraysEqual(char arr1[], char arr2[]) {
     int i;
-//    for(i = 0; i < length; i++) {
-//        if(arr1[i] != arr2[i]) {
-//            return false;
-//        }
-//    }
     i = 0;
+    // '*' marks the end of the password, so only iterate up to the *
     while((arr1[i] != '*') || (arr2[i] != '*')){
 
         if(arr1[i] != arr2[i]) {
@@ -95,7 +95,9 @@ bool arraysEqual(char arr1[], char arr2[]) {
     return true;
 }
 
-
+/**
+ * Returns the length of an array
+ */
 int get_array_length(int arr[]) {
   int length = 0;
   while (arr[length] != '\0') {
