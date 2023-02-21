@@ -9,10 +9,6 @@
 #define ACLK 32768 //Hz
 #define BEEP_PERIOD       ACLK/8    //1 second
 
-//// Note A4 - 440 Hz, B4 - 493.88 Hz, C5 - 523.26 Hz
-//#define NOTEA4  27273
-//#define NOTEB4  24297
-//#define NOTEC5  22933
 
 enum Status
 {
@@ -98,6 +94,7 @@ void main(void)
     /* Stop Watchdog timer */
     WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;
 
+    // The peripherals are configured here
     configHFXT();
     configLFXT();
     ConfigureUART_A0();
@@ -110,11 +107,13 @@ void main(void)
 
     __enable_irq();
 
+
+    // display message on LCD upon reset
     lcd_clear();
     lcd_SetLineNumber(FirstLine);
     lcd_puts("Reset...");
-   lcd_SetLineNumber(SecondLine);
-   lcd_puts("Enter Command");
+    lcd_SetLineNumber(SecondLine);
+    lcd_puts("Enter Command");
 
     kepadconfiguration();
 
@@ -122,48 +121,58 @@ void main(void)
 //Do not change input pin values
     KeypadPort->OUT = (KeypadPort->OUT & ~KeypadOutputPins)
             | (0b11110000 & KeypadOutputPins);
+
+
+    // The main while loop (keeps looping till power is ON)
     while (1)
     {
-        break_in = false;
+
+
+        break_in = false; // set the break_in Mode to false when entered back in Neutral state
         if (NewKeyPressed == YES)
         {
             NewKeyPressed = NO;
 
-
+            // check to see if command key is pressed
             int key_pressed = convert_key_val(FoundKey);
             keyPressed(FoundKey);
 
+            // switch statement based on the command key that is pressed
             switch (key_pressed)
             {
 
-            case 'A':
+            case 'A':   // enter the Unlock mode (here you enter password to unlock safe)
                 lcd_clear();
                 enterCode();
+
                 printInitialDisplay(); // reset the display
                 break;
 
-            case 'B':
+            case 'B':   // enter the Change passcode mode
                 lcd_clear();
                 setCode();
+
                 printInitialDisplay(); // reset the display
                 break;
 
-            case 'C':
+            case 'C':   // Lock the safe again
                 lcd_clear();
-                lock();
+                lock();    // turns the servo back to the LOCKED angle
+
                 printInitialDisplay(); // reset the display
                 break;
 
-            case 'D':
+            case 'D':   // Enter the Reset mode
                 lcd_clear();
                 restoreDefault();
+
                 printInitialDisplay(); // reset the display
                 break;
 
             default:
                 // code to execute when none of the above cases match
-                //
-//                lcd_putch('X');
+
+                // nothing happens if no command key is pressed
             }
 
         } // key pressed - if
@@ -171,13 +180,19 @@ void main(void)
     } // close while
 } // close main
 
+
+// set the various arrays for codes
 int max_code_length = 16;
-char master_code[16] = { '0', '*' }; //{'1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '*'};
-char user_code[16] = { '1', '2', '3', '4', '*' };
+char master_code[16] = { '0', '*' }; // By default set to '0' (But in practice it will be a 15-digit code)
+char user_code[16] = { '1', '2', '3', '4', '*' }; // By default it is set to '1234' upon reset as well
 char entered_code[16];
 
 
 
+
+// This function takes in the User code and then if the code is correct (equal to user_code) unlocks,
+// if not correct it increases the x_wrong (the wrong count), and checks if it is equal to LIMIT
+// if it is it enters the break_in mode
 void enterCode(void)
 {
 
@@ -187,20 +202,26 @@ void enterCode(void)
     clearArray(entered_code);
 
 
+    // take in user input (keystrokes)
     inputKeystrokes(entered_code);
 
+
+    // if the '#' key was entered to go back
+    // just returns to Neutral state
     if(return_to_neutral){
         return_to_neutral = false;
         return;
     }
 
 
+    // Checks if code entered was same as user_code or not
     if (arraysEqual(entered_code, user_code))
     {
+        // unlocks the servo and resets the wrong count (x_count)
 
         lcd_printArray(entered_code);
 
-        unlock();
+        unlock();  // sets servo to UNLOCK angle
         playNote(NOTEA5, BEEP_PERIOD);
         lcd_SetLineNumber(SecondLine);
         lcd_puts("Unlocked");
@@ -212,6 +233,8 @@ void enterCode(void)
     else
     {
 
+        // passcode entered is wrong
+
         lcd_printArray(entered_code);
 
         x_count++;
@@ -222,10 +245,13 @@ void enterCode(void)
         sprintf(lcd_data, " %d", x_count);
         lcd_puts(lcd_data);
 
+
+        // If code is entered wrong 3 times in a row
         if (x_count == LIMIT)
         {
 
 
+            // Send alert to Bluetooth module
             printMessage(break_alert1, sizeof(break_alert1));
             printMessage(break_alert2, sizeof(break_alert2));
 
@@ -234,9 +260,13 @@ void enterCode(void)
 
             char key;
 
+
+            // TIMED-OUT loop (won't exit till correct Master code is entered to reset the system
             while (1)
             {
 
+
+                // This loop just waits for keypad input and performs actions based on the Key pressed
                 NewKeyPressed = NO;
                 while (NewKeyPressed != YES)
                 {
@@ -249,9 +279,9 @@ void enterCode(void)
                     }
                 }
 
-                if (key == 'D')
+                if (key == 'D') // If key to enter master code is pressed enter this function
                 {
-                    break_in = true;
+                    break_in = true; // with this boolean true the back function will be disabled till the correct Master code is entered and system is reset
                     restoreDefault();
                     break;
                 }
@@ -265,6 +295,11 @@ void enterCode(void)
 
 } // end of enterCode
 
+
+
+// This state is used to change the passcode
+// Requires old code first if correct it takes in new code
+// If wrong increases x_count and exits back to neutral
 void setCode(void)
 {
 
@@ -275,15 +310,22 @@ void setCode(void)
 
     clearArray(entered_code);
 
+    // take in old password
     inputKeystrokes(entered_code);
 
+
+
+    // if the '#' key was entered to go back
+    // just returns to Neutral state
     if(return_to_neutral){
           return_to_neutral = false;
           return;
       }
 
+
     if (arraysEqual(entered_code, user_code))
     {
+        // if the code was entered correct enters this branch
 
         lcd_printArray(entered_code);
 
@@ -297,6 +339,8 @@ void setCode(void)
 
         clearArray(user_code);
 
+
+        // take in user input and set the user_code to be the new passcode
         inputKeystrokes(user_code);
 
         lcd_printArray(user_code);
@@ -310,51 +354,57 @@ void setCode(void)
     else
     {
 
+        // id the passcode was wrong enter this branch
+
         lcd_printArray(entered_code);
 
-        x_count++;
+        x_count++; // increase wrong count
         lcd_SetLineNumber(SecondLine);
         lcd_puts("Wrong -> #");
 
         sprintf(lcd_data, " %d", x_count);
         lcd_puts(lcd_data);
 
+
+        // If code is entered wrong 3 times in a row
         if (x_count == LIMIT)
         {
 
-            // ADD ALERT TO BLUETOOTH MODULE HERE
+            // Send alert to Bluetooth module
+             printMessage(break_alert1, sizeof(break_alert1));
+             printMessage(break_alert2, sizeof(break_alert2));
 
-            printMessage(break_alert1, sizeof(break_alert1));
-            printMessage(break_alert2, sizeof(break_alert2));
+             lcd_clear();
+             lcd_puts(" --TIMED OUT-- ");
 
-            lcd_clear();
-            lcd_puts(" --TIMED OUT-- ");
+             char key;
 
-            char key;
 
-            while (1)
-            {
+             // TIMED-OUT loop (won't exit till correct Master code is entered to reset the system
+             while (1)
+             {
 
-                NewKeyPressed = NO;
-                while (NewKeyPressed != YES)
-                {
-                    debounce();
 
-                    if (NewKeyPressed == YES)
-                    {
+                 // This loop just waits for keypad input and performs actions based on the Key pressed
+                 NewKeyPressed = NO;
+                 while (NewKeyPressed != YES)
+                 {
+                     debounce();
 
-                        key = convert_key_val(FoundKey);
-                    }
-                }
+                     if (NewKeyPressed == YES)
+                     {
 
-                if (key == 'D')
-                {
-                    break_in = true;
-                    restoreDefault();
-                    break;
-                }
-            }
+                         key = convert_key_val(FoundKey);
+                     }
+                 }
 
+                 if (key == 'D') // If key to enter master code is pressed enter this function
+                 {
+                     break_in = true; // with this boolean true the back function will be disabled till the correct Master code is entered and system is reset
+                     restoreDefault();
+                     break;
+                 }
+             }
         }
 
         NewKeyPressed = NO;
@@ -364,6 +414,10 @@ void setCode(void)
 
 } // end of setCode
 
+
+
+// Enter this state to reset the system
+// Enter master password
 void restoreDefault(void)
 {
     int i;
@@ -377,11 +431,8 @@ void restoreDefault(void)
 
         clearArray(entered_code);
 
-        if(break_in){
-            inputKeystrokes_m(entered_code);
-        } else {
            inputKeystrokes(entered_code);
-        }
+
 
 
         if(return_to_neutral){
@@ -404,13 +455,14 @@ void restoreDefault(void)
             user_code[1] = '2';
             user_code[2] = '3';
             user_code[3] = '4';
-            user_code[4] = '*'; //Better way?
+            user_code[4] = '*';
 
             x_count = 0;
             break;
         }
 
         lcd_timeout();
+        break_in = true;
 
     }
 
@@ -439,7 +491,7 @@ void inputKeystrokes(char arr[])
             }
         }
 
-        if(key == '#'){
+        if(key == '#' && !break_in){
             return_to_neutral = true;
             break;
         }
@@ -565,35 +617,4 @@ void printInitialDisplay(void) {
 }
 
 
-void inputKeystrokes_m(char arr[])
-{
-
-    int i = 0;
-    while (1)
-    {
-
-        NewKeyPressed = NO;
-        int key;
-
-        while (NewKeyPressed != YES)
-        {
-            debounce();
-
-            if (NewKeyPressed == YES)
-            {
-                key = convert_key_val(FoundKey);
-                keyPressed(key);
-                arr[i] = key;
-                i++;
-            }
-        }
-
-
-        if (key == '*')
-        {
-            break;
-        }
-    }
-
-}
 
