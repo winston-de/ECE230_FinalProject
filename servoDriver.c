@@ -17,7 +17,7 @@
 
 uint16_t pulseWidthTicks = SERVO_MIN_ANGLE;
 
-#define UNLOCKED_ANGLE 90
+#define UNLOCKED_ANGLE 120
 #define LOCKED_ANGLE 0
 
 #define SERVO_PORT P5

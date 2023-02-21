@@ -14,21 +14,22 @@
 //#define NOTEB4  24297
 //#define NOTEC5  22933
 
-enum Status {NO, YES};
+enum Status
+{
+    NO, YES
+};
 extern char NewKeyPressed;
 extern char FoundKey;
-
-
 
 int LIMIT = 3;
 int x_count = 0;
 
-
-
 // Bluetooth module prompts
 
-char break_alert1[] = "\rBreak-in attempt on your safe, please verify this was you or contact relevant authorities \n";
-char break_alert2[] = "\rYou can verify it was you by entering Master-Key and resetting the system \n\n";
+char break_alert1[] =
+        "\rBreak-in attempt on your safe, please verify this was you or contact relevant authorities \n";
+char break_alert2[] =
+        "\rYou can verify it was you by entering Master-Key and resetting the system \n\n";
 
 // NOTES ARE DEFINED HERE
 
@@ -53,7 +54,6 @@ char break_alert2[] = "\rYou can verify it was you by entering Master-Key and re
 #define FrequencyG4 392//Hz
 #define FrequencyA4 440 //Hz
 #define FrequencyB4 493.88//Hz
-
 
 #define FrequencyC5 523.25 //Hz
 #define FrequencyD5 587.33 //Hz
@@ -80,7 +80,6 @@ char break_alert2[] = "\rYou can verify it was you by entering Master-Key and re
 #define NOTEA4  TimerA0Clock/FrequencyA4
 #define NOTEB4  TimerA0Clock/FrequencyB4
 
-
 #define NOTEC5  TimerA0Clock/FrequencyC5
 #define NOTED5  TimerA0Clock/FrequencyD5
 #define NOTEE5  TimerA0Clock/FrequencyE5
@@ -89,9 +88,6 @@ char break_alert2[] = "\rYou can verify it was you by entering Master-Key and re
 #define NOTEA5  TimerA0Clock/FrequencyA5
 #define NOTEB5  TimerA0Clock/FrequencyB5
 
-
-
-
 /**
  * main.c
  */
@@ -99,7 +95,6 @@ void main(void)
 {
     /* Stop Watchdog timer */
     WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;
-
 
     configHFXT();
     configLFXT();
@@ -115,13 +110,8 @@ void main(void)
 
     lcd_clear();
     lcd_SetLineNumber(FirstLine);
+    printInitialDisplay();
 
-   lcd_puts("Reset...");
-   lcd_SetLineNumber(SecondLine);
-   lcd_puts("Enter Command");
-   lcd_SetLineNumber(FirstLine);
-
-//    printf("keyscan started: press a key on your 4x4 keypad ....\r\n");
     kepadconfiguration();
 
 //clear keypad output pins to be 0 to be ready for input interrupt
@@ -133,56 +123,55 @@ void main(void)
         if (NewKeyPressed == YES)
         {
             NewKeyPressed = NO;
-            lcd_clear();
 
             int key_pressed = convert_key_val(FoundKey);
             keyPressed(FoundKey);
 
-            switch (key_pressed) {
+            switch (key_pressed)
+            {
 
             case 'A':
+                lcd_clear();
                 enterCode();
                 break;
 
             case 'B':
+                lcd_clear();
                 setCode();
                 break;
 
             case 'C':
+                lcd_clear();
                 lock();
+                printInitialDisplay(); // reset the display
                 break;
 
             case 'D':
+                lcd_clear();
                 restoreDefault();
+                break;
 
             default:
-                  // code to execute when none of the above cases match
-                lcd_putch('X') ;
+                // code to execute when none of the above cases match
+                //
+//                lcd_putch('X');
             }
 
-
-
         } // key pressed - if
-
 
     } // close while
 } // close main
 
-
-
-
 int max_code_length = 16;
-char master_code[16] = {'#', '*'};         //{'1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '*'};
-char user_code[16] = {'1', '2', '3', '4','*' };
+char master_code[16] = { '#', '*' }; //{'1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '*'};
+char user_code[16] = { '1', '2', '3', '4', '*' };
 char entered_code[16];
 
-
-
-void enterCode(void){
+void enterCode(void)
+{
 
     int i;
     char lcd_data[16];
-
 
 //    for(i = 0; i < max_code_length; i++){
 //       entered_code[i] = NULL;
@@ -190,70 +179,69 @@ void enterCode(void){
 
     clearArray(entered_code);
 
-
     inputKeystrokes(entered_code);
 
-    if(arraysEqual(entered_code, user_code)){
-
+    if (arraysEqual(entered_code, user_code))
+    {
 
         lcd_printArray(entered_code);
 
         unlock();
+        playNote(NOTEA5, BEEP_PERIOD);
         lcd_SetLineNumber(SecondLine);
         lcd_puts("Unlocked");
         x_count = 0; // reset tries upon success
         NewKeyPressed = NO;
         return;
 
-    } else {
-
+    }
+    else
+    {
 
         lcd_printArray(entered_code);
 
-        x_count ++;
+        x_count++;
         lcd_SetLineNumber(SecondLine);
         lcd_puts("Wrong -> #");
+        playNote(NOTEC3, BEEP_PERIOD);
 
-
-        sprintf(lcd_data, " %d",x_count);
+        sprintf(lcd_data, " %d", x_count);
         lcd_puts(lcd_data);
 
-
-
-        if(x_count == LIMIT){
+        if (x_count == LIMIT)
+        {
 
             // ADD ALERT TO BLUETOOTH MODULE HERE
 
             printMessage(break_alert1, sizeof(break_alert1));
             printMessage(break_alert2, sizeof(break_alert2));
 
-
             lcd_clear();
             lcd_puts(" --TIMED OUT-- ");
 
-
             char key;
 
-            while(1){
+            while (1)
+            {
 
                 NewKeyPressed = NO;
-                while(NewKeyPressed != YES) {
-                     debounce();
+                while (NewKeyPressed != YES)
+                {
+                    debounce();
 
-                     if(NewKeyPressed == YES){
+                    if (NewKeyPressed == YES)
+                    {
 
-                         key = convert_key_val(FoundKey);
-                     }
+                        key = convert_key_val(FoundKey);
+                    }
                 }
 
-                if(key == 'D'){
-                   restoreDefault();
-                   break;
-               }
+                if (key == 'D')
+                {
+                    restoreDefault();
+                    break;
+                }
             }
-
-
-
         }
 
         NewKeyPressed = NO;
@@ -261,205 +249,192 @@ void enterCode(void){
 
     } // end for if wrong code was entered
 
-
 } // end of enterCode
 
+void setCode(void)
+{
 
+    int i;
+    char lcd_data[16];
 
-void setCode(void){
+    lcd_puts("Old code ->");
 
-        int i;
-        char lcd_data[16];
+    clearArray(entered_code);
 
-        lcd_puts("Old code ->");
+    inputKeystrokes(entered_code);
 
+    if (arraysEqual(entered_code, user_code))
+    {
 
-        clearArray(entered_code);
+        lcd_printArray(entered_code);
 
-       inputKeystrokes(entered_code);
+        lcd_SetLineNumber(SecondLine);
+        lcd_puts("Authorized");
+        NewKeyPressed = NO;
+        lcd_display_delay(); //arbitrary delay
+        lcd_clear();
 
-        if(arraysEqual(entered_code, user_code)){
+        lcd_SetLineNumber(FirstLine);
 
-              lcd_printArray(entered_code);
+        clearArray(user_code);
 
-               lcd_SetLineNumber(SecondLine);
-               lcd_puts("Authorized");
-               NewKeyPressed = NO;
-               lcd_display_delay(); //arbitrary delay
-               lcd_clear();
+        inputKeystrokes(user_code);
 
+        lcd_printArray(user_code);
 
-               lcd_SetLineNumber(FirstLine);
+        lcd_SetLineNumber(SecondLine);
+        lcd_puts("Code Set");
+        NewKeyPressed = NO;
+        return;
 
+    }
+    else
+    {
 
-               clearArray(user_code);
+        lcd_printArray(entered_code);
 
+        x_count++;
+        lcd_SetLineNumber(SecondLine);
+        lcd_puts("Wrong -> #");
 
-               inputKeystrokes(user_code);
+        sprintf(lcd_data, " %d", x_count);
+        lcd_puts(lcd_data);
 
-               lcd_printArray(user_code);
+        if (x_count == LIMIT)
+        {
 
-                 lcd_SetLineNumber(SecondLine);
-                 lcd_puts("Code Set");
-                 NewKeyPressed = NO;
-                 return;
+            // ADD ALERT TO BLUETOOTH MODULE HERE
 
-           } else {
+            printMessage(break_alert1, sizeof(break_alert1));
+            printMessage(break_alert2, sizeof(break_alert2));
 
+            lcd_clear();
+            lcd_puts(" --TIMED OUT-- ");
 
-//               lcd_clear();
-//
-//               lcd_SetLineNumber(FirstLine);
-//
-//               lcd_printArray(entered_code);
-//
-//               lcd_SetLineNumber(SecondLine);
-//               lcd_puts("Wrong code");
-//               lcd_display_delay(); //arbitrary delay
-//               return;
+            char key;
 
+            while (1)
+            {
 
-           lcd_printArray(entered_code);
+                NewKeyPressed = NO;
+                while (NewKeyPressed != YES)
+                {
+                    debounce();
 
-                 x_count ++;
-                 lcd_SetLineNumber(SecondLine);
-                 lcd_puts("Wrong -> #");
+                    if (NewKeyPressed == YES)
+                    {
 
+                        key = convert_key_val(FoundKey);
+                    }
+                }
 
-                 sprintf(lcd_data, " %d",x_count);
-                 lcd_puts(lcd_data);
+                if (key == 'D')
+                {
+                    restoreDefault();
+                    break;
+                }
+            }
 
+        }
 
+        NewKeyPressed = NO;
+        return;
 
-                 if(x_count == LIMIT){
-
-                     // ADD ALERT TO BLUETOOTH MODULE HERE
-
-                     printMessage(break_alert1, sizeof(break_alert1));
-                     printMessage(break_alert2, sizeof(break_alert2));
-
-
-                     lcd_clear();
-                     lcd_puts(" --TIMED OUT-- ");
-
-
-                     char key;
-
-                     while(1){
-
-                         NewKeyPressed = NO;
-                         while(NewKeyPressed != YES) {
-                              debounce();
-
-                              if(NewKeyPressed == YES){
-
-                                  key = convert_key_val(FoundKey);
-                              }
-                         }
-
-                         if(key == 'D'){
-                            restoreDefault();
-                            break;
-                        }
-                     }
-
-
-
-                 }
-
-                 NewKeyPressed = NO;
-                 return;
-
-
-           } // end of else in case of failiure to change
+    } // end of else in case of failiure to change
 
 } // end of setCode
 
+void restoreDefault(void)
+{
+    int i;
 
+    while (1)
+    {
 
-void restoreDefault(void){
-      int i;
+        lcd_SetLineNumber(FirstLine);
+        lcd_clear();
+        lcd_puts("Master Code ::");
 
-          while(1){
+        clearArray(entered_code);
+        inputKeystrokes(entered_code);
 
-              lcd_SetLineNumber(FirstLine);
-              lcd_clear();
-              lcd_puts("Master Code ::");
+        if (arraysEqual(entered_code, master_code))
+        {
 
-              clearArray(entered_code);
-              inputKeystrokes(entered_code);
+            lcd_SetLineNumber(SecondLine);
+            lcd_puts("Reseting...");
+            NewKeyPressed = NO;
+            lcd_display_delay(); //arbitrary delay
+            lcd_clear();
 
-               if(arraysEqual(entered_code, master_code)){
+            lcd_SetLineNumber(FirstLine);
 
+            user_code[0] = '1';
+            user_code[1] = '2';
+            user_code[2] = '3';
+            user_code[3] = '4';
+            user_code[4] = '*'; //Better way?
 
-                  lcd_SetLineNumber(SecondLine);
-                  lcd_puts("Reseting...");
-                  NewKeyPressed = NO;
-                  lcd_display_delay(); //arbitrary delay
-                  lcd_clear();
+            x_count = 0;
+            break;
+        }
 
+        lcd_timeout();
 
-                  lcd_SetLineNumber(FirstLine);
-
-
-                  user_code[0] = '1';user_code[1] = '2';user_code[2] = '3';user_code[3] = '4';user_code[4] = '*'; //Better way?
-
-                  x_count = 0;
-                  break;
-               }
-
-               lcd_timeout();
-
-          }
-
-
+    }
 
 } // end of restoreDefault
 
-
-
-void inputKeystrokes(char arr[]){
-
-      int i = 0;
-      while(1){
-
-          NewKeyPressed = NO;
-          int key;
-
-          while(NewKeyPressed != YES) {
-             debounce();
-
-             if(NewKeyPressed == YES){
-                 key = convert_key_val(FoundKey);
-                 keyPressed(key);
-                 arr[i] = key;
-                 i++;
-             }
-          }
-          if(key == '*'){break;}
-      }
-
-}
-
-
-void lcd_printArray(char arr[]){
-
-   int i = 0;
-   while(arr[i] != '*'){
-       lcd_putch(arr[i]);
-       i++;
-       debounce();
-
-   }
-
-}
-
-
-void clearArray(char arr[]){
-
+void inputKeystrokes(char arr[])
+{
 
     int i = 0;
-    while(arr[i] != '*'){
+    while (1)
+    {
+
+        NewKeyPressed = NO;
+        int key;
+
+        while (NewKeyPressed != YES)
+        {
+            debounce();
+
+            if (NewKeyPressed == YES)
+            {
+                key = convert_key_val(FoundKey);
+                keyPressed(key);
+                arr[i] = key;
+                i++;
+            }
+        }
+        if (key == '*')
+        {
+            break;
+        }
+    }
+
+}
+
+void lcd_printArray(char arr[])
+{
+
+    int i = 0;
+    while (arr[i] != '*')
+    {
+        lcd_putch(arr[i]);
+        i++;
+        debounce();
+
+    }
+
+}
+
+void clearArray(char arr[])
+{
+
+    int i = 0;
+    while (arr[i] != '*')
+    {
         arr[i] = NULL;
         i++;
     }
@@ -467,29 +442,30 @@ void clearArray(char arr[]){
 
 }
 
-
-
-
 // A timer that counts and displays till a minute
-void lcd_timeout(void){
+void lcd_timeout(void)
+{
 
     char lcd_data[16];
     int s = 0, m = 0;
 
     uint32_t i;
     uint32_t j = SMCLK;
-    for(i = 0; i < SMCLK; i++){
+    for (i = 0; i < SMCLK; i++)
+    {
 
-        if(j % (SMCLK/60) == 0){    // this code is executed every second
+        if (j % (SMCLK / 60) == 0)
+        {    // this code is executed every second
             // tick up the value on the display by 1 second, if a minute has passed tick up the minute value
 
             lcd_clear();
             lcd_SetLineNumber(SecondLine);
-            sprintf(lcd_data, "  %d : %d  ", m,s);
+            sprintf(lcd_data, "  %d : %d  ", m, s);
             lcd_puts(lcd_data);
             s++;
 
-            if(s % 60 == 0){
+            if (s % 60 == 0)
+            {
                 m++;
                 s = 0;
             }
@@ -499,27 +475,27 @@ void lcd_timeout(void){
 
 }
 
-
 // debounce for 5 ms
-void debounce(void){
+void debounce(void)
+{
 //delay time for debouncing switches
     int delay;
-    for(delay = 0; delay < 150; delay++);
+    for (delay = 0; delay < 150; delay++)
+        ;
 } //end debounce()
 
-
-void lcd_display_delay(void){
+void lcd_display_delay(void)
+{
     int i;
-    for(i = 0; i < 5000000; i++); //arbitrary delay
+    for (i = 0; i < 5000000; i++)
+        ; //arbitrary delay
 }
 
-
-
-void keyPressed(char key) {
+void keyPressed(char key)
+{
     //TODO: add different
-
-    switch(key){
-
+    switch (key)
+    {
     case 'A':
         playNote(NOTEB5, BEEP_PERIOD);
         break;
@@ -532,19 +508,21 @@ void keyPressed(char key) {
     case 'D':
         playNote(NOTEC3, BEEP_PERIOD);
         break;
+    case '*':
+    case '#':
+        playNote(NOTED4, BEEP_PERIOD);
+        break;
     default:
         playNote(NOTEA4, BEEP_PERIOD);
         break;
 
     }
-
-
-//    printMessage("please help me i am dying inside", 33);
 }
 
-
-
-
-
-
+void printInitialDisplay(void) {
+    lcd_puts("Reset...");
+    lcd_SetLineNumber(SecondLine);
+    lcd_puts("Enter Command");
+    lcd_SetLineNumber(FirstLine);
+}
 
