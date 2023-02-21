@@ -23,6 +23,8 @@ extern char FoundKey;
 
 int LIMIT = 3;
 int x_count = 0;
+bool return_to_neutral = false;
+bool break_in = false;
 
 // Bluetooth module prompts
 
@@ -110,7 +112,9 @@ void main(void)
 
     lcd_clear();
     lcd_SetLineNumber(FirstLine);
-    printInitialDisplay();
+    lcd_puts("Reset...");
+   lcd_SetLineNumber(SecondLine);
+   lcd_puts("Enter Command");
 
     kepadconfiguration();
 
@@ -120,9 +124,11 @@ void main(void)
             | (0b11110000 & KeypadOutputPins);
     while (1)
     {
+        break_in = false;
         if (NewKeyPressed == YES)
         {
             NewKeyPressed = NO;
+
 
             int key_pressed = convert_key_val(FoundKey);
             keyPressed(FoundKey);
@@ -133,11 +139,13 @@ void main(void)
             case 'A':
                 lcd_clear();
                 enterCode();
+                printInitialDisplay(); // reset the display
                 break;
 
             case 'B':
                 lcd_clear();
                 setCode();
+                printInitialDisplay(); // reset the display
                 break;
 
             case 'C':
@@ -149,6 +157,7 @@ void main(void)
             case 'D':
                 lcd_clear();
                 restoreDefault();
+                printInitialDisplay(); // reset the display
                 break;
 
             default:
@@ -163,9 +172,11 @@ void main(void)
 } // close main
 
 int max_code_length = 16;
-char master_code[16] = { '#', '*' }; //{'1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '*'};
+char master_code[16] = { '0', '*' }; //{'1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '*'};
 char user_code[16] = { '1', '2', '3', '4', '*' };
 char entered_code[16];
+
+
 
 void enterCode(void)
 {
@@ -173,13 +184,16 @@ void enterCode(void)
     int i;
     char lcd_data[16];
 
-//    for(i = 0; i < max_code_length; i++){
-//       entered_code[i] = NULL;
-//    }
-
     clearArray(entered_code);
 
+
     inputKeystrokes(entered_code);
+
+    if(return_to_neutral){
+        return_to_neutral = false;
+        return;
+    }
+
 
     if (arraysEqual(entered_code, user_code))
     {
@@ -211,7 +225,6 @@ void enterCode(void)
         if (x_count == LIMIT)
         {
 
-            // ADD ALERT TO BLUETOOTH MODULE HERE
 
             printMessage(break_alert1, sizeof(break_alert1));
             printMessage(break_alert2, sizeof(break_alert2));
@@ -238,6 +251,7 @@ void enterCode(void)
 
                 if (key == 'D')
                 {
+                    break_in = true;
                     restoreDefault();
                     break;
                 }
@@ -262,6 +276,11 @@ void setCode(void)
     clearArray(entered_code);
 
     inputKeystrokes(entered_code);
+
+    if(return_to_neutral){
+          return_to_neutral = false;
+          return;
+      }
 
     if (arraysEqual(entered_code, user_code))
     {
@@ -330,6 +349,7 @@ void setCode(void)
 
                 if (key == 'D')
                 {
+                    break_in = true;
                     restoreDefault();
                     break;
                 }
@@ -356,7 +376,18 @@ void restoreDefault(void)
         lcd_puts("Master Code ::");
 
         clearArray(entered_code);
-        inputKeystrokes(entered_code);
+
+        if(break_in){
+            inputKeystrokes_m(entered_code);
+        } else {
+           inputKeystrokes(entered_code);
+        }
+
+
+        if(return_to_neutral){
+              return_to_neutral = false;
+              return;
+         }
 
         if (arraysEqual(entered_code, master_code))
         {
@@ -407,6 +438,12 @@ void inputKeystrokes(char arr[])
                 i++;
             }
         }
+
+        if(key == '#'){
+            return_to_neutral = true;
+            break;
+        }
+
         if (key == '*')
         {
             break;
@@ -487,7 +524,7 @@ void debounce(void)
 void lcd_display_delay(void)
 {
     int i;
-    for (i = 0; i < 5000000; i++)
+    for (i = 0; i < 1000000; i++)
         ; //arbitrary delay
 }
 
@@ -520,9 +557,43 @@ void keyPressed(char key)
 }
 
 void printInitialDisplay(void) {
-    lcd_puts("Reset...");
-    lcd_SetLineNumber(SecondLine);
-    lcd_puts("Enter Command");
+    lcd_display_delay();
+    lcd_clear();
     lcd_SetLineNumber(FirstLine);
+    lcd_puts("Enter Command");
+
+}
+
+
+void inputKeystrokes_m(char arr[])
+{
+
+    int i = 0;
+    while (1)
+    {
+
+        NewKeyPressed = NO;
+        int key;
+
+        while (NewKeyPressed != YES)
+        {
+            debounce();
+
+            if (NewKeyPressed == YES)
+            {
+                key = convert_key_val(FoundKey);
+                keyPressed(key);
+                arr[i] = key;
+                i++;
+            }
+        }
+
+
+        if (key == '*')
+        {
+            break;
+        }
+    }
+
 }
 
