@@ -417,11 +417,13 @@ void setCode(void)
 
 
 // Enter this state to reset the system
-// Enter master password
+// If master code is correct then reset the system to default settings
+// If wrong it will Time out for 1 minute before anything else can be done
 void restoreDefault(void)
 {
     int i;
 
+    // Main loop, keep in loop till master code entered is correct or back key is pressed (if not in break_in mode)
     while (1)
     {
 
@@ -431,10 +433,11 @@ void restoreDefault(void)
 
         clearArray(entered_code);
 
-           inputKeystrokes(entered_code);
+        // take in the user input (keystrokes)
+        inputKeystrokes(entered_code);
 
-
-
+        // if the '#' key was entered to go back
+        // just returns to Neutral state
         if(return_to_neutral){
               return_to_neutral = false;
               return;
@@ -442,6 +445,8 @@ void restoreDefault(void)
 
         if (arraysEqual(entered_code, master_code))
         {
+
+            // If master passcode is correct enter this branch
 
             lcd_SetLineNumber(SecondLine);
             lcd_puts("Reseting...");
@@ -451,6 +456,7 @@ void restoreDefault(void)
 
             lcd_SetLineNumber(FirstLine);
 
+            // reset the passcode back to default of '1234'
             user_code[0] = '1';
             user_code[1] = '2';
             user_code[2] = '3';
@@ -468,10 +474,14 @@ void restoreDefault(void)
 
 } // end of restoreDefault
 
+
+// This function takes in user keystrokes and fills the array with the keystrokes
 void inputKeystrokes(char arr[])
 {
 
     int i = 0;
+
+    // loop to take in the user key
     while (1)
     {
 
@@ -491,11 +501,14 @@ void inputKeystrokes(char arr[])
             }
         }
 
+        // if # key is pressed then makes boolean true which will cause each state to return to neutral state
+        // but only happens if break_in is false (i.e the break_in state is not active allowing user to back out)
         if(key == '#' && !break_in){
             return_to_neutral = true;
             break;
         }
 
+        // signals the end of user input if * is pressed(acts as enter)
         if (key == '*')
         {
             break;
@@ -504,6 +517,9 @@ void inputKeystrokes(char arr[])
 
 }
 
+
+// Prints the array on the LCD
+// it is used to print the user input after they are done entering it
 void lcd_printArray(char arr[])
 {
 
@@ -518,6 +534,7 @@ void lcd_printArray(char arr[])
 
 }
 
+// Clears the array
 void clearArray(char arr[])
 {
 
@@ -573,6 +590,8 @@ void debounce(void)
         ;
 } //end debounce()
 
+
+// Acts keep the feedback to the user printed on the LCD before erasing it
 void lcd_display_delay(void)
 {
     int i;
@@ -580,9 +599,11 @@ void lcd_display_delay(void)
         ; //arbitrary delay
 }
 
+
+// plays NOTES based on the key that is pressed
 void keyPressed(char key)
 {
-    //TODO: add different
+
     switch (key)
     {
     case 'A':
@@ -608,6 +629,8 @@ void keyPressed(char key)
     }
 }
 
+
+// Prints the initial display whenever the user is in the Neutral mode
 void printInitialDisplay(void) {
     lcd_display_delay();
     lcd_clear();
