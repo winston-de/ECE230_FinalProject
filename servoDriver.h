@@ -73,8 +73,14 @@ extern void incrementTenDegree(void);
  */
 extern void setServoAngle(uint8_t angle);
 
+/**
+ * Move the servo into the unlocked position, defined in servo.c
+ */
 extern void unlock(void);
 
+/**
+ * Move the servo into the locked position, defined in servo.c
+ */
 extern void lock(void);
 
 
