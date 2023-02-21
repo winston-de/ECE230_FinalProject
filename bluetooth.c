@@ -6,14 +6,18 @@
  */
 #include "msp.h"
 
+#define BT_PORT P3
+#define RX_MASK BIT3
+#define TX_MASK BIT2
+
 
 void initBluetooth(void) {
     /* Stop Watchdog timer */
      WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;
 
      /* Configure UART pins */
-     P3->SEL0 |= BIT2 | BIT3;                // set 2-UART pins as secondary function
-     P3->SEL1 &= ~(BIT2 | BIT3);
+     P3->SEL0 |= RX_MASK | TX_MASK;                // set 2-UART pins as secondary function
+     P3->SEL1 &= ~(RX_MASK | TX_MASK);
 
      /* Configure UART
       *  Asynchronous UART mode, 8N1 (8-bit data, no parity, 1 stop bit),
